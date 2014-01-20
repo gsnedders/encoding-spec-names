@@ -1,0 +1,77 @@
+<!doctype html>
+<title>Web Encoding names</title>
+<p>Status: script not run (is scripting enabled/supported?)</p>
+<div></div>
+
+<script>
+var status = document.getElementsByTagName("p")[0],
+    results = document.getElementsByTagName("div")[0];
+
+var encodings_url = "http://encoding.spec.whatwg.org/encodings.json";
+
+function s(t) {
+  status.textContent = "Status: " + t;
+}
+
+s("JS running");
+
+function handler() {
+  if (this.readyState != 4)
+    return;
+  if (this.status != 200 && this.status != 304) {
+    s("Load returned HTTP status code " + this.status);
+    return;
+  }
+  s("Loaded; building table");
+
+  var encodings_table = JSON.parse(this.responseText);
+  var encodings = get_encodings(encodings_table);
+  build_table(encodings);
+}
+
+function get_encodings(encodings_table) {
+  var encodings = [];
+  for (var i = 0; i < encodings_table.length; i++) {
+    // Subsections of encoding table
+    for (var j = 0; j < encodings_table[i].encodings.length; j++) {
+      // Each encoding
+      var encoding = encodings_table[i].encodings[j];
+      encodings.push(encoding);
+    }
+  }
+  return encodings;
+}
+
+function build_table(encodings) {
+  results.innerHTML = "<table><thead><tr><th>Encoding name<th>document.characterSet<tbody></table>";
+
+  for (var i = 0; i < encodings.length; i++) {
+    var encoding = encodings[i];
+    var name = encodings[i].name;
+    var row = results.firstChild.tBodies[0].insertRow(-1);
+    var nameCell = row.insertCell(-1);
+    nameCell.textContent = name;
+    var resultCell = row.insertCell(-1);
+    resultCell.textContent = "?";
+    test_encoding(name, resultCell);
+  }
+}
+
+function test_encoding(name, resultNode) {
+  var iframe = document.createElement("iframe");
+  (function(resultNode){
+    iframe.onload = function() {
+      resultNode.textContent = iframe.contentDocument.characterSet;
+    };
+  })(resultNode);
+  iframe.src = "data:text/html;charset=" + name + ",foo";
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+}
+
+var client = new XMLHttpRequest();
+client.onreadystatechange = handler;
+client.open("GET", encodings_url);
+client.send();
+s("Request sent; loading");
+</script>
