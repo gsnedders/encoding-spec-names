@@ -64,7 +64,7 @@ function test_encoding(name, resultNode) {
       resultNode.textContent = iframe.contentDocument.characterSet;
     };
   })(resultNode);
-  iframe.src = "data:text/html;charset=" + name + ",foo";
+  iframe.src = "response.php?charset=" + name;
   iframe.style.display = "none";
   document.body.appendChild(iframe);
 }
